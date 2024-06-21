@@ -26,12 +26,12 @@ function shuffle(array) {
  *  - script_feed: list of script (actor) posts, typically from a call to the database: Script.find(...)
  *  - user: a User document
  *  - order: 'SHUFFLE', 'CHRONOLOGICAL'; indicates the order the posts in the final feed should be displayed in.
- *  - removeHarmfulContent (boolean): T/F; indicates if a harmful post should be removed from the final feed.
+ *  - removedFlaggedContent (boolean): T/F; indicates if a flagged post should be removed from the final feed.
  *  - removedBlockedUserContent (boolean): T/F; indicates if posts from a blocked user should be removed from the final feed.
  * Returns: 
  *  - finalfeed: the processed final feed of posts for the user
  */
-exports.getFeed = function(user_posts, script_feed, user, order, removeHarmfulContent, removedBlockedUserContent) {
+exports.getFeed = function(user_posts, script_feed, user, order, removeFlaggedContent, removedBlockedUserContent) {
     // Array of posts for the final feed
     let finalfeed = [];
     // Array of seen and unseen posts, used when order=='shuffle' so that unseen posts appear before seen posts on the final feed.
@@ -96,8 +96,8 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeHarmfulCo
                                 if (commentObject.liked) {
                                     script_feed[0].comments[commentIndex].liked = true;
                                 }
-                                // Check if this comment has been marked as harmful by the user. If true, remove the comment from the post.
-                                if (commentObject.harmful) {
+                                // Check if this comment has been flagged by the user. If true, remove the comment from the post.
+                                if (commentObject.flagged) {
                                     script_feed[0].comments.splice(commentIndex, 1);
                                 }
                             }
@@ -116,21 +116,21 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeHarmfulCo
                     script_feed[0].like = true;
                     script_feed[0].likes++;
                 }
-                // Check if this post has been marked as harmful by the user: If true and removeHarmfulContent is true, remove the post.
-                if (user.feedAction[feedIndex].harmfulTime[0]) {
-                    if (removeHarmfulContent) {
+                // Check if this post has been flagged by the user: If true and removeFlaggedContent is true, remove the post.
+                if (user.feedAction[feedIndex].flagTime[0]) {
+                    if (removeFlaggedContent) {
                         script_feed.splice(0, 1);
                     } else {
-                        script_feed[0].harmful = true;
+                        script_feed[0].flagged = true;
                     }
                 } // Check if this post is by a blocked user: If true and removedBlockedUserContent is true, remove the post.
                 else if (user.blocked.includes(script_feed[0].actor.username & removedBlockedUserContent)) {
                     script_feed.splice(0, 1);
                 } else {
-                    // If the post is neither marked as harmful or from a blocked user, add it to the final feed.
+                    // If the post is neither flagged or from a blocked user, add it to the final feed.
                     // If the final feed is shuffled, add posts to finalfeed_unseen and finalfeed_seen based on if the user has seen the post before or not.
                     if (order == 'SHUFFLE') {
-                        // Check if the user has viewed the post before.
+                        // Check if there user has viewed the post before.
                         if (!user.feedAction[feedIndex].readTime[0]) {
                             finalfeed_unseen.push(script_feed[0]);
                         } else {
@@ -162,4 +162,7 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeHarmfulCo
         finalfeed_unseen = shuffle(finalfeed_unseen);
         finalfeed = finalfeed_unseen.concat(finalfeed_seen);
     }
-    // Concatenate the most recent user posts
+    // Concatenate the most recent user posts to the front of finalfeed.
+    finalfeed = new_user_posts.concat(finalfeed);
+    return finalfeed;
+};
