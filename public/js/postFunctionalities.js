@@ -180,6 +180,7 @@ function addComment(e) {
                 <div class="text">${text}</div>
                 <div class="actions"> 
                     <a class="like comment" onClick="likeComment(event)">Like</a> 
+                    <a class="flag comment" onClick="flagComment(event)">Flag</a> <!-- Added flag button -->
                 </div> 
             </div>
         </div>`;
@@ -206,6 +207,27 @@ function addComment(e) {
                 numComments = json.numComments;
             });
     }
+}
+
+function repostPost(e) {
+    const target = $(e.target);
+    const post = target.closest(".ui.fluid.card");
+    const postID = post.attr("postID");
+    const postClass = post.attr("postClass");
+    const currDate = Date.now();
+
+    $.post("/feed", {
+        postID: postID,
+        repost: currDate,
+        postClass: postClass,
+        _csrf: $('meta[name="csrf-token"]').attr('content')
+    }).done(function(response) {
+        // Assuming response contains updated number of reposts or any other relevant data
+        // You can update the UI here if needed
+        console.log("Repost successful!");
+    }).fail(function(error) {
+        console.error("Error reposting:", error);
+    });
 }
 
 function followUser(e) {
