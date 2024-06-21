@@ -247,14 +247,32 @@ exports.postUpdateFeedAction = async(req, res, next) => {
  * POST /userPost_feed/
  * Record user's actions on USER posts. 
  */
-exports.postUpdateUserPostFeedAction = async(req, res, next) => {
+// Include necessary modules and dependencies as needed
+
+/**
+ * POST /userPost_feed/
+ * Record user's actions on USER posts, including reposting.
+ */
+exports.postUpdateUserPostFeedAction = async (req, res, next) => {
     try {
         const user = await User.findById(req.user.id).exec();
         // Find the index of object in user.posts
         let feedIndex = _.findIndex(user.posts, function(o) { return o.postID == req.body.postID; });
 
         if (feedIndex == -1) {
-            // Should not happen.
+            // Handle case where post is not found (though it should not happen)
+            res.send({ result: "error", message: "Post not found" });
+            return;
+        }
+
+        // User reposted the post.
+        if (req.body.repost) {
+            const currDate = Date.now();
+            const repost = {
+                reposted: true,
+                repostTime: currDate
+            };
+            user.posts[feedIndex].reposts.push(repost);
         }
         // User created a new comment on the post.
         else if (req.body.new_comment) {
@@ -309,3 +327,31 @@ exports.postUpdateUserPostFeedAction = async(req, res, next) => {
         next(err);
     }
 }
+
+// Function to handle reposting a post
+exports.repostPost = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user.id).exec();
+        // Find the index of object in user.posts
+        let feedIndex = _.findIndex(user.posts, function(o) { return o.postID == req.body.postID; });
+
+        if (feedIndex == -1) {
+            // Handle case where post is not found (though it should not happen)
+            res.send({ result: "error", message: "Post not found" });
+            return;
+        }
+
+        const currDate = Date.now();
+        const repost = {
+            reposted: true,
+            repostTime: currDate
+        };
+        user.posts[feedIndex].reposts.push(repost);
+        await user.save();
+        res.send({ result: "success", message: "Post reposted successfully" });
+    } catch (err) {
+        next(err);
+    }
+}
+
+
