@@ -67,8 +67,8 @@
                   a.flag.comment Flag
                   //- Add harmful button for comments
                   a.ui.harmful.button.comment-harmful-button(tabindex='0', onClick='markAsHarmful(event)', class=comment.markedAsHarmful ? 'red' : '')
-                i.warning.circle.icon
-                  | Harmful
+  i.warning.circle.icon
+  | Harmful
           else
             //- Else this is a normal comment from the script
             .comment(commentID=comment.id)
