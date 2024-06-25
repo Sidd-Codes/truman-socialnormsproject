@@ -38,7 +38,7 @@
         | Like
       a.ui.basic.red.left.pointing.label.count=val.likes
     //- Updated Harmful button
-    .ui.harmful.button(tabindex='0', onClick="markAsHarmful(event)", class=val.markedAsHarmful ? 'red' : '')
+    .ui.harmful.button.tabindex='0', onClick='markAsHarmful(event)', class=`ui harmful button ${val.markedAsHarmful ? 'red' : ''}`
       i.warning.circle.icon
       | Harmful
   if val.comments.length > 0
