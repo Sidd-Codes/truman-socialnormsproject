@@ -64,6 +64,11 @@
                 .text=comment.body
                 .actions
                   a.like.comment(class=comment.liked ? "red" : null ) !{comment.liked ? "Unlike" : "Like"}
+                  a.flag.comment Flag
+                  //- Add harmful button for comments
+                  a.ui.harmful.button.comment-harmful-button.tabindex='0', onClick='markAsHarmful(event)', class=`ui harmful button ${comment.markedAsHarmful ? 'red' : ''}`
+                    i.warning.circle.icon
+                    | Harmful
           else
             //- Else this is a normal comment from the script
             .comment(commentID=comment.id)
@@ -81,6 +86,10 @@
                 .actions
                   a.like.comment(class=comment.liked ? "red" : null ) !{comment.liked ? "Unlike" : "Like"}
                   a.flag.comment Flag
+                  //- Add harmful button for comments
+                  a.ui.harmful.button.comment-harmful-button.tabindex='0', onClick='markAsHarmful(event)', class=`ui harmful button ${comment.markedAsHarmful ? 'red' : ''}`
+                    i.warning.circle.icon
+                    | Harmful
   .extra.content
     .ui.fluid.left.labeled.right.icon.input
       .ui.label
