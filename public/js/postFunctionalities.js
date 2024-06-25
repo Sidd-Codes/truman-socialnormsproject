@@ -209,6 +209,29 @@ function addComment(e) {
     }
 }
 
+function markAsHarmful(e) {
+    const target = $(e.target);
+    const post = target.closest(".ui.fluid.card");
+    const postID = post.attr("postID");
+    const postClass = post.attr("postClass");
+    const flag = Date.now();
+
+    $.post("/feed", {
+        postID: postID,
+        flag: flag,
+        harmful: true, // Add a new parameter to indicate the post is harmful
+        postClass: postClass,
+        _csrf: $('meta[name="csrf-token"]').attr('content')
+    }).done(function(response) {
+        // Optionally, update UI or handle success
+        console.log("Marked as harmful successfully!");
+        // You might want to hide or disable the button after marking as harmful
+        target.prop('disabled', true).text('Marked as Harmful');
+    }).fail(function(error) {
+        console.error("Error marking as harmful:", error);
+    });
+}
+
 function repostPost(e) {
     const target = $(e.target);
     const post = target.closest(".ui.fluid.card");
