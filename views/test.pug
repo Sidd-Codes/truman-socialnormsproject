@@ -20,11 +20,21 @@ block content
       i.big.photo.link.icon
     each val in script
       if val.relativeTime 
-        //- This is a User made post
+        //- This is a User-made post
         include partials/userPost
+        //- Add Repost button
+        .ui.bottom.attached.icon.buttons
+          .ui.repost.button(tabindex='0')
+            i.retweet.icon
+            | Repost
       else 
         //- This is an Actor post
         include partials/actorPost
+        //- Add Repost button
+        .ui.bottom.attached.icon.buttons
+          .ui.repost.button(tabindex='0')
+            i.retweet.icon
+            | Repost
     .ui.fluid.card
       .content
         .description
