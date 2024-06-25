@@ -45,7 +45,6 @@
     .content
       .ui.comments
         each comment in val.comments
-          //- Comment is user-made
           if comment.new_comment
             .comment(commentID=comment.commentID)
               a.avatar.image(href='/me')
@@ -65,12 +64,10 @@
                 .actions
                   a.like.comment(class=comment.liked ? "red" : null) !{comment.liked ? "Unlike" : "Like"}
                   a.flag.comment Flag
-                  //- Add harmful button for comments
                   a.ui.harmful.button.comment-harmful-button(tabindex='0', onClick='markAsHarmful(event)', class=comment.markedAsHarmful ? 'red' : '')
                     i.warning.circle.icon
                     | Harmful
           else
-            //- Else this is a normal comment from the script
             .comment(commentID=comment.id)
               a.avatar(href='/user/'+comment.actor.username)
                 img(src='/public/picture.svg', data-src=cdn+"/profile_pictures/"+comment.actor.profile.picture)
@@ -86,7 +83,6 @@
                 .actions
                   a.like.comment(class=comment.liked ? "red" : null) !{comment.liked ? "Unlike" : "Like"}
                   a.flag.comment Flag
-                  //- Add harmful button for comments
                   a.ui.harmful.button.comment-harmful-button(tabindex='0', onClick='markAsHarmful(event)', class=comment.markedAsHarmful ? 'red' : '')
                     i.warning.circle.icon
                     | Harmful
