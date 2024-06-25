@@ -219,18 +219,18 @@ function markAsHarmful(e) {
     $.post("/feed", {
         postID: postID,
         flag: flag,
-        harmful: true, // Add a new parameter to indicate the post is harmful
+        harmful: true, // Indicate that the post is harmful
         postClass: postClass,
         _csrf: $('meta[name="csrf-token"]').attr('content')
     }).done(function(response) {
-        // Optionally, update UI or handle success
         console.log("Marked as harmful successfully!");
-        // You might want to hide or disable the button after marking as harmful
-        target.prop('disabled', true).text('Marked as Harmful');
+        // Update button appearance
+        target.addClass('red').text('Marked as Harmful').prop('disabled', true);
     }).fail(function(error) {
         console.error("Error marking as harmful:", error);
     });
 }
+
 
 function repostPost(e) {
     const target = $(e.target);
