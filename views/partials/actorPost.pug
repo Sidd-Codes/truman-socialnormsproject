@@ -1,16 +1,23 @@
-.ui.fluid.card.dim(postClass=val.class, postID=val.id, type='actor', actor_un = val.actor.username, actor_name = val.actor.profile.name, actor_pic = val.actor.profile.picture)
+.ui.fluid.card.dim(
+  postClass=val.class, 
+  postID=val.id, 
+  type='actor', 
+  actor_un=val.actor.username, 
+  actor_name=val.actor.profile.name, 
+  actor_pic=val.actor.profile.picture
+)
   //- dimmer DIV for flagging
   .ui.dimmer.flag
     .content
       .center
         h2.ui.inverted.icon.header
           i.red.flag.icon
-          |  You've flagged this!
-          h3.ui.inverted.header
-            span="The admins will review this post further. We are sorry you had this experience."
+          | You've flagged this!
+        h3.ui.inverted.header
+          span The admins will review this post further. We are sorry you had this experience.
   .content
     .right.floated.time.meta= (user.createdAt.getTime() + val.time)
-    a(href='/user/'+val.actor.username)     
+    a(href='/user/'+val.actor.username)
       img.ui.avatar.image(src='/public/picture.svg', data-src=cdn+"/profile_pictures/"+val.actor.profile.picture)
       span=val.actor.profile.name
   .img.post.image
@@ -21,15 +28,18 @@
   .ui.bottom.three.attached.icon.buttons
     .ui.reply.button(tabindex='0')
       i.reply.icon
-      |  Reply
+      | Reply
     .ui.flag.button(tabindex='0')
       i.flag.icon
-      |  Flag
+      | Flag
     .ui.labeled.button(tabindex='0')
-      .ui.like.button(class=val.like? "red": null)
+      .ui.like.button(class=val.like ? "red" : null)
         i.heart.icon
-        |  Like
+        | Like
       a.ui.basic.red.left.pointing.label.count=val.likes
+    .ui.harmful.button(tabindex='0')
+      i.warning.circle.icon
+      | Harmful
   if val.comments.length > 0
     .content
       .ui.comments
@@ -49,14 +59,14 @@
                   .rating
                     i.heart.icon(class=comment.liked ? "red" : null)
                     span.num=comment.likes+(comment.liked ? 1 : 0)
-                    |  Likes
+                    | Likes
                 .text=comment.body
                 .actions
                   a.like.comment(class=comment.liked ? "red" : null ) !{comment.liked ? "Unlike" : "Like"}
-          //- Else this is a normal comment from the script
           else
+            //- Else this is a normal comment from the script
             .comment(commentID=comment.id)
-              a.avatar(href='/user/'+comment.actor.username)                     
+              a.avatar(href='/user/'+comment.actor.username)
                 img(src='/public/picture.svg', data-src=cdn+"/profile_pictures/"+comment.actor.profile.picture)
               .content
                 a.author(href='/user/'+comment.actor.username)=comment.actor.profile.name
@@ -65,7 +75,7 @@
                   .rating
                     i.heart.icon(class=comment.liked ? "red" : null)
                     span.num=comment.likes+(comment.liked ? 1 : 0)
-                    |  Likes
+                    | Likes
                 .text=comment.body
                 .actions
                   a.like.comment(class=comment.liked ? "red" : null ) !{comment.liked ? "Unlike" : "Like"}
@@ -76,8 +86,8 @@
         if user.profile.picture
           img.ui.avatar.image.small(src='/user_avatar/'+user.profile.picture, name=user.profile.name || user.username || user.id)
         else
-          img.ui.avatar.image.small(src=user.gravatar(60), name=user.profile.name || user.username || user.id)            
+          img.ui.avatar.image.small(src=user.gravatar(60), name=user.profile.name || user.username || user.id)
       .ui.form
-        .field 
+        .field
           textarea.newcomment(type='text', placeholder='Write a Comment' rows='1')
-      i.big.send.link.icon
+        i.big.send.link.icon
