@@ -210,7 +210,7 @@ function addComment(e) {
 }
 
 function markAsHarmful(e) {
-    const target = $(e.target);
+    const target = $(e.target).closest('.ui.harmful.button');
     const post = target.closest(".ui.fluid.card");
     const postID = post.attr("postID");
     const postClass = post.attr("postClass");
@@ -225,15 +225,16 @@ function markAsHarmful(e) {
     }).done(function(response) {
         console.log("Marked as harmful successfully!");
         // Update button appearance
-        target.addClass('red').text('Marked as Harmful').prop('disabled', true);
+        target.addClass('red').prop('disabled', true);
     }).fail(function(error) {
         console.error("Error marking as harmful:", error);
     });
 }
 
 
+
 function repostPost(e) {
-    const target = $(e.target);
+    const target = $(e.target).closest('.ui.repost.button');
     const post = target.closest(".ui.fluid.card");
     const postID = post.attr("postID");
     const postClass = post.attr("postClass");
@@ -252,6 +253,18 @@ function repostPost(e) {
         console.error("Error reposting:", error);
     });
 }
+
+// Event Listeners for Buttons
+$(window).on('load', () => {
+    // ... other event listeners ...
+
+    // Harmful button
+    $('.ui.harmful.button').on('click', markAsHarmful);
+
+    // Repost button
+    $('.ui.repost.button').on('click', repostPost);
+});
+
 
 function followUser(e) {
     const target = $(e.target);
