@@ -25,7 +25,7 @@
   .content
     .description=val.body
     .myTimer.hidden 0
-  .ui.bottom.three.attached.icon.buttons
+  .ui.bottom.four.attached.icon.buttons
     .ui.reply.button(tabindex='0')
       i.reply.icon
       | Reply
@@ -41,6 +41,10 @@
     .ui.harmful.button(tabindex='0', onClick='markAsHarmful(event)', class=val.markedAsHarmful ? 'red' : '')
       i.warning.circle.icon
       | Harmful
+    //- New Repost button
+    .ui.repost.button(tabindex='0', onClick='repostPost(event)')
+      i.retweet.icon
+      | Repost
   if val.comments.length > 0
     .content
       .ui.comments
