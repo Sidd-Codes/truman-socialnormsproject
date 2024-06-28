@@ -1,4 +1,4 @@
-const Script = require('../models/Script.js');
+const Script = require('../models/Script');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const helpers = require('./helpers');
@@ -109,7 +109,6 @@ exports.newPost = async (req, res) => {
                         absTime: new Date(user.createdAt.getTime() + post.relativeTime + reply.time),
                         new_comment: false,
                         liked: false,
-                        flagged: false,
                         likes: 0
                     };
                     post.comments.push(tmp_actor_reply);
@@ -156,7 +155,6 @@ exports.postUpdateFeedAction = async (req, res, next) => {
                 relativeTime: req.body.new_comment - user.createdAt,
                 absTime: req.body.new_comment,
                 liked: false,
-                flagged: false,
             }
             user.feedAction[feedIndex].comments.push(cat);
         }
@@ -196,25 +194,11 @@ exports.postUpdateFeedAction = async (req, res, next) => {
                 user.feedAction[feedIndex].comments[commentIndex].liked = false;
                 if (req.body.isUserComment != 'true') user.numCommentLikes--;
             }
-
-            // User flagged the comment.
-            else if (req.body.flag) {
-                const flag = req.body.flag;
-                user.feedAction[feedIndex].comments[commentIndex].flagTime.push(flag);
-                user.feedAction[feedIndex].comments[commentIndex].flagged = true;
-            }
         }
         // User interacted with the post.
         else {
-            // User flagged the post.
-            if (req.body.flag) {
-                const flag = req.body.flag;
-                user.feedAction[feedIndex].flagTime = [flag];
-                user.feedAction[feedIndex].flagged = true;
-            }
-
             // User liked the post.
-            else if (req.body.like) {
+            if (req.body.like) {
                 const like = req.body.like;
                 user.feedAction[feedIndex].likeTime.push(like);
                 user.feedAction[feedIndex].liked = true;
@@ -245,105 +229,53 @@ exports.postUpdateFeedAction = async (req, res, next) => {
 };
 
 /**
- * POST /userPost_feed/
- * Record user's actions on USER posts, including reposting.
+ * POST /repost
+ * Record a repost action.
  */
-exports.postUpdateUserPostFeedAction = async (req, res, next) => {
+exports.postRepost = async (req, res, next) => {
     try {
         const user = await User.findById(req.user.id).exec();
-        // Find the index of object in user.posts
-        let feedIndex = _.findIndex(user.posts, function (o) { return o.postID == req.body.postID; });
+        const postID = req.body.postID;
+        const postClass = req.body.postClass;
+        const relativeTime = Date.now() - user.createdAt;
 
-        if (feedIndex == -1) {
-            // Handle case where post is not found (though it should not happen)
-            res.send({ result: "error", message: "Post not found" });
-            return;
-        }
-
-        // User reposted the post.
-        if (req.body.repost) {
-            const currDate = Date.now();
-            const repost = {
-                reposted: true,
-                repostTime: currDate
-            };
-            user.posts[feedIndex].reposts.push(repost);
-        }
-        // User created a new comment on the post.
-        else if (req.body.new_comment) {
-            user.numComments = user.numComments + 1;
-            const cat = {
-                body: req.body.comment_text,
-                commentID: user.numComments,
-                relativeTime: req.body.new_comment - user.createdAt,
-                absTime: req.body.new_comment,
-                new_comment: true,
-                liked: false,
-                flagged: false,
-                likes: 0
-            };
-            user.posts[feedIndex].comments.push(cat);
-        }
-        // User interacted with a comment on the post.
-        else if (req.body.commentID) {
-            const commentIndex = _.findIndex(user.posts[feedIndex].comments, function (o) {
-                return o.commentID == req.body.commentID && o.new_comment == (req.body.isUserComment == 'true');
+        let post = user.posts.id(postID);
+        if (post) {
+            post.reposts.push({
+                userID: req.user.id,
+                time: relativeTime
             });
-            if (commentIndex == -1) {
-                console.log("Should not happen.");
-            }
-            // User liked the comment.
-            else if (req.body.like) {
-                user.posts[feedIndex].comments[commentIndex].liked = true;
-            }
-            // User unliked the comment. 
-            else if (req.body.unlike) {
-                user.posts[feedIndex].comments[commentIndex].liked = false;
-            }
-            // User flagged the comment.
-            else if (req.body.flag) {
-                user.posts[feedIndex].comments[commentIndex].flagged = true;
-            }
+            await user.save();
+            res.send({ result: "success", message: "Post reposted successfully." });
+        } else {
+            res.send({ result: "error", message: "Post not found." });
         }
-        // User interacted with the post. 
-        else {
-            // User liked the post.
-            if (req.body.like) {
-                user.posts[feedIndex].liked = true;
-            }
-            // User unliked the post.
-            if (req.body.unlike) {
-                user.posts[feedIndex].liked = false;
-            }
-        }
-        await user.save();
-        res.send({ result: "success", numComments: user.numComments });
     } catch (err) {
         next(err);
     }
 };
 
-// Function to handle reposting a post
-exports.repostPost = async (req, res, next) => {
+/**
+ * POST /harmful
+ * Record a harmful button action.
+ */
+exports.postHarmful = async (req, res, next) => {
     try {
         const user = await User.findById(req.user.id).exec();
-        // Find the index of object in user.posts
-        let feedIndex = _.findIndex(user.posts, function (o) { return o.postID == req.body.postID; });
+        const postID = req.body.postID;
+        const relativeTime = Date.now() - user.createdAt;
 
-        if (feedIndex == -1) {
-            // Handle case where post is not found (though it should not happen)
-            res.send({ result: "error", message: "Post not found" });
-            return;
+        let post = user.posts.id(postID);
+        if (post) {
+            post.harmful.push({
+                userID: req.user.id,
+                time: relativeTime
+            });
+            await user.save();
+            res.send({ result: "success", message: "Harmful action recorded successfully." });
+        } else {
+            res.send({ result: "error", message: "Post not found." });
         }
-
-        const currDate = Date.now();
-        const repost = {
-            reposted: true,
-            repostTime: currDate
-        };
-        user.posts[feedIndex].reposts.push(repost);
-        await user.save();
-        res.send({ result: "success", message: "Post reposted successfully" });
     } catch (err) {
         next(err);
     }
