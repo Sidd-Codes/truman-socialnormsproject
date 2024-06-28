@@ -242,4 +242,153 @@ exports.postUpdateProfile = async(req, res, next) => {
         req.flash('success', { msg: 'Profile information has been updated.' });
         res.redirect('/account');
     } catch (err) {
-        if (err.code === 
+        if (err.code === 11000) {
+            req.flash('errors', { msg: 'The email address you have entered is already associated with an account.' });
+            return res.redirect('/account');
+        }
+        next(err);
+    }
+};
+
+/**
+ * POST /account/password
+ * Update user's current password.
+ */
+exports.postUpdatePassword = async(req, res, next) => {
+    const validationErrors = [];
+    if (!validator.isLength(req.body.password, { min: 4 })) validationErrors.push({ msg: 'Password must be at least 4 characters long.' });
+    if (req.body.password !== req.body.confirmPassword) validationErrors.push({ msg: 'Passwords do not match.' });
+
+    if (validationErrors.length) {
+        req.flash('errors', validationErrors);
+        return res.redirect('/account');
+    }
+
+    try {
+        const user = await User.findById(req.user.id).exec();
+        user.password = req.body.password;
+        await user.save();
+        req.flash('success', { msg: 'Password has been changed.' });
+        res.redirect('/account');
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
+ * POST /account/delete
+ * Delete user account.
+ */
+exports.postDeleteAccount = async(req, res, next) => {
+    try {
+        await User.deleteOne({ _id: req.user.id }).exec();
+        req.logout((err) => {
+            if (err) console.log('Error : Failed to logout.', err);
+            req.session.destroy((err) => {
+                if (err) console.log('Error : Failed to destroy the session during logout.', err);
+                req.user = null;
+                res.redirect('/');
+            });
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
+ * GET /reset/:token
+ * Render the password reset page.
+ */
+exports.getReset = async(req, res, next) => {
+    if (req.isAuthenticated()) {
+        return res.redirect('/');
+    }
+    try {
+        const user = await User.findOne({ passwordResetToken: req.params.token })
+            .where('passwordResetExpires').gt(Date.now()).exec();
+        if (!user) {
+            req.flash('errors', { msg: 'Password reset token is invalid or has expired.' });
+            return res.redirect('/forgot');
+        }
+        res.render('account/reset', {
+            title: 'Password Reset'
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
+ * POST /reset/:token
+ * Process the password reset request.
+ */
+exports.postReset = async(req, res, next) => {
+    const validationErrors = [];
+    if (!validator.isLength(req.body.password, { min: 4 })) validationErrors.push({ msg: 'Password must be at least 4 characters long.' });
+    if (req.body.password !== req.body.confirm) validationErrors.push({ msg: 'Passwords do not match.' });
+
+    if (validationErrors.length) {
+        req.flash('errors', validationErrors);
+        return res.redirect('back');
+    }
+
+    try {
+        const user = await User.findOne({ passwordResetToken: req.params.token })
+            .where('passwordResetExpires').gt(Date.now()).exec();
+        if (!user) {
+            req.flash('errors', { msg: 'Password reset token is invalid or has expired.' });
+            return res.redirect('back');
+        }
+        user.password = req.body.password;
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save();
+        req.logIn(user, (err) => {
+            if (err) return next(err);
+            res.redirect('/');
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
+ * GET /forgot
+ * Render the forgot password page.
+ */
+exports.getForgot = (req, res) => {
+    if (req.isAuthenticated()) {
+        return res.redirect('/');
+    }
+    res.render('account/forgot', {
+        title: 'Forgot Password'
+    });
+};
+
+/**
+ * POST /forgot
+ * Create a random token, then send user an email with a reset link.
+ */
+exports.postForgot = async(req, res, next) => {
+    const validationErrors = [];
+    if (!validator.isEmail(req.body.email)) validationErrors.push({ msg: 'Please enter a valid email address.' });
+    if (validationErrors.length) {
+        req.flash('errors', validationErrors);
+        return res.redirect('/forgot');
+    }
+    req.body.email = validator.normalizeEmail(req.body.email, { gmail_remove_dots: false });
+
+    try {
+        const user = await User.findOne({ email: req.body.email }).exec();
+        if (!user) {
+            req.flash('errors', { msg: 'No account with that email address exists.' });
+            return res.redirect('/forgot');
+        }
+        user.passwordResetToken = crypto.randomBytes(16).toString('hex');
+        user.passwordResetExpires = Date.now() + 3600000; // 1 hour
+        await user.save();
+        res.redirect('/forgot');
+    } catch (err) {
+        next(err);
+    }
+};
