@@ -3,7 +3,6 @@ const validator = require('validator');
 const dotenv = require('dotenv');
 dotenv.config({ path: '.env' }); // See the file .env.example for the structure of .env
 const User = require('../models/User');
-// const Post = require('../models/Post'); // Remove or comment this out
 
 /**
  * GET /login
@@ -113,7 +112,7 @@ exports.postSignup = async(req, res, next) => {
             return res.redirect('/signup');
         }
         /*###############################
-        Place Experimental Variables Here!
+        Place Experimental Varibles Here!
         ###############################*/
         const numConditions = process.env.NUM_EXP_CONDITIONS;
         const experimentalConditionNames = process.env.EXP_CONDITIONS_NAMES.split(",");
@@ -257,13 +256,12 @@ exports.postUpdateProfile = async(req, res, next) => {
 exports.postUpdatePassword = async(req, res, next) => {
     const validationErrors = [];
     if (!validator.isLength(req.body.password, { min: 4 })) validationErrors.push({ msg: 'Password must be at least 4 characters long.' });
-    if (req.body.password !== req.body.confirmPassword) validationErrors.push({ msg: 'Passwords do not match.' });
+    if (validator.escape(req.body.password) !== validator.escape(req.body.confirmPassword)) validationErrors.push({ msg: 'Passwords do not match.' });
 
     if (validationErrors.length) {
         req.flash('errors', validationErrors);
         return res.redirect('/account');
     }
-
     try {
         const user = await User.findById(req.user.id).exec();
         user.password = req.body.password;
@@ -276,77 +274,35 @@ exports.postUpdatePassword = async(req, res, next) => {
 };
 
 /**
- * POST /account/delete
- * Delete user account.
+ * POST /pageLog
+ * Record user's page visit to pageLog.
  */
-exports.postDeleteAccount = async(req, res, next) => {
+exports.postPageLog = async(req, res, next) => {
     try {
-        await User.deleteOne({ _id: req.user.id }).exec();
-        req.logout((err) => {
-            if (err) console.log('Error : Failed to logout.', err);
-            req.session.destroy((err) => {
-                if (err) console.log('Error : Failed to destroy the session during logout.', err);
-                req.user = null;
-                res.redirect('/');
-            });
-        });
+        const user = await User.findById(req.user.id).exec();
+        user.logPage(Date.now(), req.body.path);
+        res.set('Content-Type', 'application/json; charset=UTF-8');
+        res.send({ result: "success" });
     } catch (err) {
         next(err);
     }
 };
 
 /**
- * GET /reset/:token
- * Render the password reset page.
+ * POST /pageTimes
+ * Record user's time on site to pageTimes.
  */
-exports.getReset = async(req, res, next) => {
-    if (req.isAuthenticated()) {
-        return res.redirect('/');
-    }
+exports.postPageTime = async(req, res, next) => {
     try {
-        const user = await User.findOne({ passwordResetToken: req.params.token })
-            .where('passwordResetExpires').gt(Date.now()).exec();
-        if (!user) {
-            req.flash('errors', { msg: 'Password reset token is invalid or has expired.' });
-            return res.redirect('/forgot');
-        }
-        res.render('account/reset', {
-            title: 'Password Reset'
-        });
-    } catch (err) {
-        next(err);
-    }
-};
-
-/**
- * POST /reset/:token
- * Process the password reset request.
- */
-exports.postReset = async(req, res, next) => {
-    const validationErrors = [];
-    if (!validator.isLength(req.body.password, { min: 4 })) validationErrors.push({ msg: 'Password must be at least 4 characters long.' });
-    if (req.body.password !== req.body.confirm) validationErrors.push({ msg: 'Passwords do not match.' });
-
-    if (validationErrors.length) {
-        req.flash('errors', validationErrors);
-        return res.redirect('back');
-    }
-
-    try {
-        const user = await User.findOne({ passwordResetToken: req.params.token })
-            .where('passwordResetExpires').gt(Date.now()).exec();
-        if (!user) {
-            req.flash('errors', { msg: 'Password reset token is invalid or has expired.' });
-            return res.redirect('back');
-        }
-        user.password = req.body.password;
-        user.passwordResetToken = undefined;
-        user.passwordResetExpires = undefined;
+        const user = await User.findById(req.user.id).exec();
+        // What day in the study is the user in? 
+        const one_day = 86400000; // number of milliseconds in a day
+        const time_diff = Date.now() - user.createdAt; // Time difference between now and account creation.
+        const current_day = Math.floor(time_diff / one_day);
+        user.pageTimes[current_day] += parseInt(req.body.time);
         await user.save();
-        req.logIn(user, (err) => {
-            if (err) return next(err);
-            res.redirect('/');
-        });
+        res.set('Content-Type', 'application/json; charset=UTF-8');
+        res.send({ result: "success" });
     } catch (err) {
         next(err);
     }
@@ -354,41 +310,60 @@ exports.postReset = async(req, res, next) => {
 
 /**
  * GET /forgot
- * Render the forgot password page.
+ * Render Forgot Password page.
  */
 exports.getForgot = (req, res) => {
     if (req.isAuthenticated()) {
         return res.redirect('/');
     }
     res.render('account/forgot', {
-        title: 'Forgot Password'
+        title: 'Forgot Password',
+        email: process.env.RESEARCHER_EMAIL
     });
 };
 
 /**
- * POST /forgot
- * Create a random token, then send user an email with a reset link.
+ * Deactivate accounts who are completed with the study, except for admin accounts. Called 3 times a day. Scheduled via CRON jobs in app.js
  */
-exports.postForgot = async(req, res, next) => {
-    const validationErrors = [];
-    if (!validator.isEmail(req.body.email)) validationErrors.push({ msg: 'Please enter a valid email address.' });
-    if (validationErrors.length) {
-        req.flash('errors', validationErrors);
-        return res.redirect('/forgot');
-    }
-    req.body.email = validator.normalizeEmail(req.body.email, { gmail_remove_dots: false });
-
+exports.stillActive = async() => {
     try {
-        const user = await User.findOne({ email: req.body.email }).exec();
-        if (!user) {
-            req.flash('errors', { msg: 'No account with that email address exists.' });
-            return res.redirect('/forgot');
+        const activeUsers = await User.find().where('active').equals(true).exec();
+        for (const user of activeUsers) {
+            const study_length = 86400000 * process.env.NUM_DAYS; // Milliseconds in NUM_DAYS days
+            const time_diff = Date.now() - user.createdAt; // Time difference between now and account creation.
+            if ((time_diff >= study_length) && !user.isAdmin) {
+                user.active = false;
+                user.logPostStats();
+                await user.save();
+            }
         }
-        user.passwordResetToken = crypto.randomBytes(16).toString('hex');
-        user.passwordResetExpires = Date.now() + 3600000; // 1 hour
-        await user.save();
-        res.redirect('/forgot');
     } catch (err) {
         next(err);
+    }
+};
+
+/**
+ * GET /completed
+ * Render Admin Dashboard: Basic information on users currrently in the study
+ */
+exports.userTestResults = async(req, res) => {
+    if (!req.user.isAdmin) {
+        res.redirect('/');
+    } else {
+        try {
+            const users = await User.find().where('isAdmin').equals(false).exec();
+            for (const user of users) {
+                const study_length = 86400000 * process.env.NUM_DAYS; // Milliseconds in NUM_DAYS days
+                const time_diff = Date.now() - user.createdAt; // Time difference between now and account creation.
+                if ((time_diff >= study_length) && !user.isAdmin) {
+                    user.active = false;
+                    user.logPostStats();
+                    await user.save();
+                }
+            }
+            res.render('completed', { users: users });
+        } catch (err) {
+            next(err);
+        }
     }
 };
