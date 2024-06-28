@@ -1,6 +1,6 @@
 function likePost(e) {
     const target = $(e.target).closest('.ui.like.button');
-    const label = target.closest('.ui.fluid.card').find(".ui.basic.red.left.pointing.label.count");
+    const label = target.closest('.ui.fluid.card').find(".ui.basic.green.left.pointing.label.count");
     const postID = target.closest(".ui.fluid.card").attr("postID");
     const postClass = target.closest(".ui.fluid.card").attr("postClass");
     const currDate = Date.now();
