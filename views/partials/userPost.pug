@@ -16,10 +16,10 @@
       i.reply.icon
       | Reply
     .ui.labeled.button(tabindex='0')
-      .ui.like.button(class=val.liked ? "red" : null, onclick=`likePost('${val.postID}')`)
+      .ui.like.button(class=val.liked ? "green" : null, onclick=`likePost('${val.postID}')`)
         i.heart.icon
         | Like
-      a.ui.basic.red.left.pointing.label.count=val.likes+(val.liked ? 1 : 0)
+      a.ui.basic.green.left.pointing.label.count=val.likes+(val.liked ? 1 : 0)
     //- Repost Button Logic to prevent reposting of reposts
     - if (val.type !== 'repost' || val.type === 'repost' && !val.isRepost)
       a.ui.button(tabindex='0', onclick=`repost(${val.postID})`)
@@ -53,7 +53,7 @@
                     a.ui.harmful.button.comment-harmful-button(tabindex='0', onclick=`markAsHarmful('${comment.commentID}')`, class=comment.markedAsHarmful ? 'red' : '')
                       i.warning.circle.icon
                       | Harmful
-                    a.like.comment(class=comment.liked ? "red" : null, onclick=`likeComment('${comment.commentID}')`) !{comment.liked ? "Unlike" : "Like"}
+                    a.like.comment(class=comment.liked ? "green" : null, onclick=`likeComment('${comment.commentID}')`) !{comment.liked ? "Unlike" : "Like"}
             //- Else this is a normal comment from the script
             else
               .comment(commentID=comment.commentID)
@@ -64,7 +64,7 @@
                   .metadata
                     span.date=(comment.absTime.getTime())
                     .rating
-                      i.heart.icon(class=comment.liked ? "red" : null)
+                      i.heart.icon(class=comment.liked ? "green" : null)
                       span.num=comment.likes+(comment.liked ? 1 : 0)
                       | Likes
                   .text=comment.body
