@@ -6,7 +6,6 @@
         img(src='/user_avatar/'+user.profile.picture)
       else
         img(src=user.gravatar(60))
-    a(href='/me')
       span=user.profile.name || user.username || user.id
   .image
     img(src='/user_post/'+val.picture)
@@ -15,22 +14,23 @@
   .two.ui.bottom.attached.icon.buttons
     .ui.reply.button(tabindex='0')
       i.reply.icon
-      |  Reply
+      | Reply
     .ui.labeled.button(tabindex='0')
-      .ui.like.button(class=val.liked ? "red" : null)
+      .ui.like.button(class=val.liked ? "red" : null, onclick=`likePost('${val.postID}')`)
         i.heart.icon
-        |  Like
+        | Like
       a.ui.basic.red.left.pointing.label.count=val.likes+(val.liked ? 1 : 0)
-    //- Repost Button
-    a.ui.button(tabindex='0', onclick=`repost(${val.postID})`)
-      i.retweet.icon
-      |  Repost
+    //- Repost Button Logic to prevent reposting of reposts
+    - if (val.type !== 'repost' || val.type === 'repost' && !val.isRepost)
+      a.ui.button(tabindex='0', onclick=`repost(${val.postID})`)
+        i.retweet.icon
+        | Repost
   if val.comments.length > 0
     .content
       .ui.comments
         each comment in val.comments
           if !comment.flagged
-            //-IF this comment is USER made, do this
+            //- If this comment is USER made, do this
             if comment.new_comment
               .comment(commentID=comment.commentID)
                 a.avatar.image(href='/me')
@@ -45,10 +45,14 @@
                     .rating
                       i.heart.icon(class=comment.liked ? "red" : null)
                       span.num=comment.likes+(comment.liked ? 1 : 0)
-                      |  Likes
+                      | Likes
                   .text=comment.body
                   .actions
-                    a.like.comment(class=comment.liked ? "red" : null) !{comment.liked ? "Unlike" : "Like"}
+                    //- Enable flagging for comments
+                    a.ui.harmful.button.comment-harmful-button(tabindex='0', onclick=`markAsHarmful('${comment.commentID}')`, class=comment.markedAsHarmful ? 'red' : '')
+                      i.warning.circle.icon
+                      | Harmful
+                    a.like.comment(class=comment.liked ? "red" : null, onclick=`likeComment('${comment.commentID}')`) !{comment.liked ? "Unlike" : "Like"}
             //- Else this is a normal comment from the script
             else
               .comment(commentID=comment.commentID)
@@ -61,19 +65,22 @@
                     .rating
                       i.heart.icon(class=comment.liked ? "red" : null)
                       span.num=comment.likes+(comment.liked ? 1 : 0)
-                      |  Likes
+                      | Likes
                   .text=comment.body
                   .actions
-                    a.like.comment(class=comment.liked ? "red" : null) !{comment.liked ? "Unlike" : "Like"}
-                    a.flag.comment Flag
+                    //- Enable flagging for comments
+                    a.ui.harmful.button.comment-harmful-button(tabindex='0', onclick=`markAsHarmful('${comment.commentID}')`, class=comment.markedAsHarmful ? 'red' : '')
+                      i.warning.circle.icon
+                      | Harmful
+                    a.like.comment(class=comment.liked ? "red" : null, onclick=`likeComment('${comment.commentID}')`) !{comment.liked ? "Unlike" : "Like"}
   .extra.content
     .ui.fluid.left.labeled.right.icon.input
       .ui.label
         if user.profile.picture
           img.ui.avatar.image.small(src='/user_avatar/'+user.profile.picture, name=user.profile.name || user.username || user.id)
         else
-          img.ui.avatar.image.small(src=user.gravatar(60), name=user.profile.name || user.username || user.id)            
+          img.ui.avatar.image.small(src=user.gravatar(60), name=user.profile.name || user.username || user.id)
       .ui.form
-        .field 
+        .field
           textarea.newcomment(type='text', placeholder='Write a Comment' rows='1')
       i.big.send.link.icon
