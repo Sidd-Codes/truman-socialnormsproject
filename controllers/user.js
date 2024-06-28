@@ -254,6 +254,46 @@ exports.postUpdateProfile = async(req, res, next) => {
  * POST /account/password
  * Update user's current password.
  */
-exports.postUpdatePassword = async(req, res, next) => {
+/**
+ * POST /account/password
+ * Update user's current password.
+ */
+exports.postUpdatePassword = async (req, res, next) => {
     const validationErrors = [];
-    if (!validator.isLength(req.body.password, { min: 4 })) validationErrors.push({ msg: 'Password
+    
+    // Validate password length
+    if (!validator.isLength(req.body.password, { min: 4 })) {
+        validationErrors.push({ msg: 'Password must be at least 4 characters long.' });
+    }
+
+    // Handle validation errors
+    if (validationErrors.length) {
+        req.flash('errors', validationErrors);
+        return res.redirect('/account/password');
+    }
+
+    try {
+        const user = await User.findById(req.user.id).exec();
+
+        // Perform password update logic here
+        // Example: Set the new password
+        user.password = req.body.password;
+
+        // Save the updated user object
+        await user.save();
+
+        // Flash success message
+        req.flash('success', { msg: 'Password successfully updated.' });
+
+        // Redirect to account management page or appropriate destination
+        res.redirect('/account');
+    } catch (err) {
+        // Handle error during password update
+        if (err.code === 11000) {
+            req.flash('errors', { msg: 'The email address you have entered is already associated with an account.' });
+            return res.redirect('/account');
+        }
+        next(err); // Pass error to next middleware or error handler
+    }
+};
+
