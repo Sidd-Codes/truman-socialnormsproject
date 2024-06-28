@@ -1,4 +1,4 @@
-.ui.fluid.card.dim(
+ui.fluid.card.dim(
   postClass=val.class, 
   postID=val.id, 
   type='actor', 
@@ -21,10 +21,10 @@
       i.reply.icon
       | Reply
     .ui.labeled.button(tabindex='0')
-      .ui.like.button(class=val.like ? "green" : null, onClick='likePost(event)')
+      .ui.like.button(class=val.like ? "green" : null)
         i.heart.icon
         | Like
-      a.ui.basic.red.left.pointing.label.count=val.likes
+      a.ui.basic.green.left.pointing.label.count=val.likes
     //- Updated Harmful button
     .ui.harmful.button(tabindex='0', onClick='markAsHarmful(event)', class=val.markedAsHarmful ? 'red' : '')
       i.warning.circle.icon
@@ -54,9 +54,7 @@
                     | Likes
                 .text=comment.body
                 .actions
-                  a.like.comment(class=comment.liked ? "red" : null, onClick='likeComment(event)')
-                    i.heart.icon(class=comment.liked ? "red" : null)
-                    | !{comment.liked ? "Unlike" : "Like"}
+                  a.like.comment(class=comment.liked ? "red" : null) !{comment.liked ? "Unlike" : "Like"}
                   a.ui.harmful.button.comment-harmful-button(tabindex='0', onClick='markAsHarmful(event)', class=comment.markedAsHarmful ? 'red' : '')
                     i.warning.circle.icon
                     | Harmful
@@ -74,9 +72,7 @@
                     | Likes
                 .text=comment.body
                 .actions
-                  a.like.comment(class=comment.liked ? "red" : null, onClick='likeComment(event)')
-                    i.heart.icon(class=comment.liked ? "red" : null)
-                    | !{comment.liked ? "Unlike" : "Like"}
+                  a.like.comment(class=comment.liked ? "red" : null) !{comment.liked ? "Unlike" : "Like"}
                   a.ui.harmful.button.comment-harmful-button(tabindex='0', onClick='markAsHarmful(event)', class=comment.markedAsHarmful ? 'red' : '')
                     i.warning.circle.icon
                     | Harmful
