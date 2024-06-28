@@ -25,11 +25,12 @@
       a.ui.button(tabindex='0', onclick=`repost(${val.postID})`)
         i.retweet.icon
         | Repost
-  if val.comments.length > 0
+  if val.comments && val.comments.length > 0
     .content
       .ui.comments
         each comment in val.comments
-          if !comment.flagged
+          //- Check if comment.actor is defined before accessing its properties
+          if comment.actor
             //- If this comment is USER made, do this
             if comment.new_comment
               .comment(commentID=comment.commentID)
