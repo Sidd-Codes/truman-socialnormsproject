@@ -30,7 +30,7 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeHarmfulCo
 
     while ((script_feed && script_feed.length) || (user_posts && user_posts.length)) {
         if (!script_feed || script_feed.length === 0 ||
-            ((user_posts && user_posts.length > 0) && (script_feed[0].time < user_posts[0].relativeTime))) {
+            ((user_posts && user_posts.length > 0) && (script_feed[0]?.time < user_posts[0]?.relativeTime))) {
 
             if (user_posts[0]) {
                 user_posts[0].comments = user_posts[0].comments.filter(comment => comment.absTime < Date.now());
@@ -51,7 +51,7 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeHarmfulCo
                 script_feed[0].comments = script_feed[0].comments.filter(comment => !comment.class || comment.class == user.experimentalCondition);
                 script_feed[0].comments = script_feed[0].comments.filter(comment => user.createdAt.getTime() + comment.time < Date.now());
 
-                const feedIndex = _.findIndex(user.feedAction, o => o.post.equals(script_feed[0].id));
+                const feedIndex = _.findIndex(user.feedAction, o => o.post && o.post.equals(script_feed[0].id));
                 if (feedIndex !== -1 && script_feed[0].actor.username !== user.username) { // Check if post is not user's own
                     if (Array.isArray(user.feedAction[feedIndex].comments) && user.feedAction[feedIndex].comments) {
                         for (const commentObject of user.feedAction[feedIndex].comments) {
@@ -84,7 +84,7 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeHarmfulCo
                         script_feed[0].like = true;
                         script_feed[0].likes++;
                     }
-                    if (user.feedAction[feedIndex].harmTime[0]) {
+                    if (user.feedAction[feedIndex].harmTime && user.feedAction[feedIndex].harmTime[0]) {
                         if (removeHarmfulContent) {
                             script_feed.splice(0, 1);
                         } else {
@@ -94,7 +94,7 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeHarmfulCo
                         script_feed.splice(0, 1);
                     } else {
                         if (order == 'SHUFFLE') {
-                            if (!user.feedAction[feedIndex].readTime[0]) {
+                            if (!user.feedAction[feedIndex].readTime || !user.feedAction[feedIndex].readTime[0]) {
                                 finalfeed_unseen.push(script_feed[0]);
                             } else {
                                 finalfeed_seen.push(script_feed[0]);
