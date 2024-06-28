@@ -10,7 +10,7 @@ dotenv.config({ path: '.env' }); // See the file .env.example for the structure 
  * GET /
  * Fetch and render newsfeed.
  */
-exports.getScript = async(req, res, next) => {
+exports.getScript = async (req, res, next) => {
     try {
         const one_day = 86400000; // Number of milliseconds in a day.
         const time_now = Date.now(); // Current date.
@@ -29,7 +29,7 @@ exports.getScript = async(req, res, next) => {
                     if (err) console.log('Error : Failed to destroy the session during logout.', err);
                     req.user = null;
                     req.flash('errors', { msg: 'Account is no longer active. Study is over.' });
-                    res.redirect(`/login${req.query.r_id ? `?r_id=${req.query.r_id}` : ''}`);
+                    res.redirect('/login' + (req.query.r_id ? `?r_id=${req.query.r_id}` : ""));
                 });
             });
         }
@@ -54,7 +54,7 @@ exports.getScript = async(req, res, next) => {
 
         // Array of any user-made posts within the past 24 hours, sorted by time they were created.
         let user_posts = user.getPostInPeriod(time_limit, time_diff);
-        user_posts.sort(function(a, b) {
+        user_posts.sort(function (a, b) {
             return b.relativeTime - a.relativeTime;
         });
 
@@ -71,7 +71,7 @@ exports.getScript = async(req, res, next) => {
  * Post /post/new
  * Record a new user-made post. Include any actor replies (comments) that go along with it.
  */
-exports.newPost = async(req, res) => {
+exports.newPost = async (req, res) => {
     try {
         const user = await User.findById(req.user.id).exec();
         if (req.file) {
@@ -86,6 +86,7 @@ exports.newPost = async(req, res) => {
                 liked: false,
                 likes: 0,
                 comments: [],
+                reposts: [], // Initialize reposts array
                 absTime: currDate,
                 relativeTime: currDate - user.createdAt,
             };
@@ -130,11 +131,11 @@ exports.newPost = async(req, res) => {
  * POST /feed/
  * Record user's actions on ACTOR posts. 
  */
-exports.postUpdateFeedAction = async(req, res, next) => {
+exports.postUpdateFeedAction = async (req, res, next) => {
     try {
         const user = await User.findById(req.user.id).exec();
         // Check if user has interacted with the post before.
-        let feedIndex = _.findIndex(user.feedAction, function(o) { return o.post == req.body.postID; });
+        let feedIndex = _.findIndex(user.feedAction, function (o) { return o.post == req.body.postID; });
 
         // If the user has not interacted with the post before, add the post to user.feedAction.
         if (feedIndex == -1) {
@@ -164,10 +165,10 @@ exports.postUpdateFeedAction = async(req, res, next) => {
             const isUserComment = (req.body.isUserComment == 'true');
             // Check if user has interacted with the comment before.
             let commentIndex = (isUserComment) ?
-                _.findIndex(user.feedAction[feedIndex].comments, function(o) {
+                _.findIndex(user.feedAction[feedIndex].comments, function (o) {
                     return o.new_comment_id == req.body.commentID && o.new_comment == isUserComment
                 }) :
-                _.findIndex(user.feedAction[feedIndex].comments, function(o) {
+                _.findIndex(user.feedAction[feedIndex].comments, function (o) {
                     return o.comment == req.body.commentID && o.new_comment == isUserComment
                 });
 
@@ -245,19 +246,13 @@ exports.postUpdateFeedAction = async(req, res, next) => {
 
 /**
  * POST /userPost_feed/
- * Record user's actions on USER posts. 
- */
-// Include necessary modules and dependencies as needed
-
-/**
- * POST /userPost_feed/
  * Record user's actions on USER posts, including reposting.
  */
 exports.postUpdateUserPostFeedAction = async (req, res, next) => {
     try {
         const user = await User.findById(req.user.id).exec();
         // Find the index of object in user.posts
-        let feedIndex = _.findIndex(user.posts, function(o) { return o.postID == req.body.postID; });
+        let feedIndex = _.findIndex(user.posts, function (o) { return o.postID == req.body.postID; });
 
         if (feedIndex == -1) {
             // Handle case where post is not found (though it should not happen)
@@ -291,7 +286,7 @@ exports.postUpdateUserPostFeedAction = async (req, res, next) => {
         }
         // User interacted with a comment on the post.
         else if (req.body.commentID) {
-            const commentIndex = _.findIndex(user.posts[feedIndex].comments, function(o) {
+            const commentIndex = _.findIndex(user.posts[feedIndex].comments, function (o) {
                 return o.commentID == req.body.commentID && o.new_comment == (req.body.isUserComment == 'true');
             });
             if (commentIndex == -1) {
@@ -326,14 +321,14 @@ exports.postUpdateUserPostFeedAction = async (req, res, next) => {
     } catch (err) {
         next(err);
     }
-}
+};
 
 // Function to handle reposting a post
 exports.repostPost = async (req, res, next) => {
     try {
         const user = await User.findById(req.user.id).exec();
         // Find the index of object in user.posts
-        let feedIndex = _.findIndex(user.posts, function(o) { return o.postID == req.body.postID; });
+        let feedIndex = _.findIndex(user.posts, function (o) { return o.postID == req.body.postID; });
 
         if (feedIndex == -1) {
             // Handle case where post is not found (though it should not happen)
@@ -352,4 +347,4 @@ exports.repostPost = async (req, res, next) => {
     } catch (err) {
         next(err);
     }
-}
+};
