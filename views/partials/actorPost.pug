@@ -6,15 +6,6 @@
   actor_name=val.actor.profile.name, 
   actor_pic=val.actor.profile.picture
 )
-  //- dimmer DIV for flagging
-  .ui.dimmer.flag
-    .content
-      .center
-        h2.ui.inverted.icon.header
-          i.red.flag.icon
-          | You've flagged this!
-        h3.ui.inverted.header
-          span The admins will review this post further. We are sorry you had this experience.
   .content
     .right.floated.time.meta= (user.createdAt.getTime() + val.time)
     a(href='/user/'+val.actor.username)
@@ -29,9 +20,6 @@
     .ui.reply.button(tabindex='0')
       i.reply.icon
       | Reply
-    .ui.flag.button(tabindex='0')
-      i.flag.icon
-      | Flag
     .ui.labeled.button(tabindex='0')
       .ui.like.button(class=val.like ? "red" : null)
         i.heart.icon
@@ -67,7 +55,6 @@
                 .text=comment.body
                 .actions
                   a.like.comment(class=comment.liked ? "red" : null) !{comment.liked ? "Unlike" : "Like"}
-                  a.flag.comment Flag
                   a.ui.harmful.button.comment-harmful-button(tabindex='0', onClick='markAsHarmful(event)', class=comment.markedAsHarmful ? 'red' : '')
                     i.warning.circle.icon
                     | Harmful
@@ -86,7 +73,6 @@
                 .text=comment.body
                 .actions
                   a.like.comment(class=comment.liked ? "red" : null) !{comment.liked ? "Unlike" : "Like"}
-                  a.flag.comment Flag
                   a.ui.harmful.button.comment-harmful-button(tabindex='0', onClick='markAsHarmful(event)', class=comment.markedAsHarmful ? 'red' : '')
                     i.warning.circle.icon
                     | Harmful
