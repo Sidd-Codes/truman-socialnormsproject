@@ -4,7 +4,7 @@ const _ = require('lodash');
 function shuffle(array) {
     let currentIndex = array.length,
         randomIndex;
-    while (currentIndex != 0) {
+    while (currentIndex !== 0) {
         randomIndex = Math.floor(Math.random() * currentIndex);
         currentIndex--;
         [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
@@ -52,7 +52,7 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeHarmfulCo
                 script_feed[0].comments = script_feed[0].comments.filter(comment => user.createdAt.getTime() + comment.time < Date.now());
 
                 const feedIndex = _.findIndex(user.feedAction, o => o.post.equals(script_feed[0].id));
-                if (feedIndex != -1) {
+                if (feedIndex !== -1 && script_feed[0].actor.username !== user.username) { // Check if post is not user's own
                     if (Array.isArray(user.feedAction[feedIndex].comments) && user.feedAction[feedIndex].comments) {
                         for (const commentObject of user.feedAction[feedIndex].comments) {
                             if (commentObject.new_comment) {
@@ -67,7 +67,7 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeHarmfulCo
                                 script_feed[0].comments.push(cat);
                             } else {
                                 const commentIndex = _.findIndex(script_feed[0].comments, o => o.id == commentObject.comment);
-                                if (commentIndex != -1) {
+                                if (commentIndex !== -1) {
                                     if (commentObject.liked) {
                                         script_feed[0].comments[commentIndex].liked = true;
                                     }
@@ -90,7 +90,7 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeHarmfulCo
                         } else {
                             script_feed[0].harmful = true;
                         }
-                    } else if (user.blocked.includes(script_feed[0].actor.username && removedBlockedUserContent)) {
+                    } else if (user.blocked.includes(script_feed[0].actor.username) && removedBlockedUserContent) {
                         script_feed.splice(0, 1);
                     } else {
                         if (order == 'SHUFFLE') {
@@ -105,16 +105,7 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeHarmfulCo
                         script_feed.splice(0, 1);
                     }
                 } else {
-                    if (user.blocked.includes(script_feed[0].actor.username && removedBlockedUserContent)) {
-                        script_feed.splice(0, 1);
-                    } else {
-                        if (order == 'SHUFFLE') {
-                            finalfeed_unseen.push(script_feed[0]);
-                        } else {
-                            finalfeed.push(script_feed[0]);
-                        }
-                        script_feed.splice(0, 1);
-                    }
+                    script_feed.splice(0, 1);
                 }
             } else {
                 script_feed.splice(0, 1);
