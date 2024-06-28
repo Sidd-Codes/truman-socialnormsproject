@@ -3,6 +3,7 @@ const validator = require('validator');
 const dotenv = require('dotenv');
 dotenv.config({ path: '.env' }); // See the file .env.example for the structure of .env
 const User = require('../models/User');
+const Post = require('../models/Post'); // Import the Post model
 
 /**
  * GET /login
@@ -255,115 +256,4 @@ exports.postUpdateProfile = async(req, res, next) => {
  */
 exports.postUpdatePassword = async(req, res, next) => {
     const validationErrors = [];
-    if (!validator.isLength(req.body.password, { min: 4 })) validationErrors.push({ msg: 'Password must be at least 4 characters long.' });
-    if (validator.escape(req.body.password) !== validator.escape(req.body.confirmPassword)) validationErrors.push({ msg: 'Passwords do not match.' });
-
-    if (validationErrors.length) {
-        req.flash('errors', validationErrors);
-        return res.redirect('/account');
-    }
-    try {
-        const user = await User.findById(req.user.id).exec();
-        user.password = req.body.password;
-        await user.save();
-        req.flash('success', { msg: 'Password has been changed.' });
-        res.redirect('/account');
-    } catch (err) {
-        next(err);
-    }
-};
-
-/**
- * POST /pageLog
- * Record user's page visit to pageLog.
- */
-exports.postPageLog = async(req, res, next) => {
-    try {
-        const user = await User.findById(req.user.id).exec();
-        user.logPage(Date.now(), req.body.path);
-        res.set('Content-Type', 'application/json; charset=UTF-8');
-        res.send({ result: "success" });
-    } catch (err) {
-        next(err);
-    }
-};
-
-/**
- * POST /pageTimes
- * Record user's time on site to pageTimes.
- */
-exports.postPageTime = async(req, res, next) => {
-    try {
-        const user = await User.findById(req.user.id).exec();
-        // What day in the study is the user in? 
-        const one_day = 86400000; // number of milliseconds in a day
-        const time_diff = Date.now() - user.createdAt; // Time difference between now and account creation.
-        const current_day = Math.floor(time_diff / one_day);
-        user.pageTimes[current_day] += parseInt(req.body.time);
-        await user.save();
-        res.set('Content-Type', 'application/json; charset=UTF-8');
-        res.send({ result: "success" });
-    } catch (err) {
-        next(err);
-    }
-};
-
-/**
- * GET /forgot
- * Render Forgot Password page.
- */
-exports.getForgot = (req, res) => {
-    if (req.isAuthenticated()) {
-        return res.redirect('/');
-    }
-    res.render('account/forgot', {
-        title: 'Forgot Password',
-        email: process.env.RESEARCHER_EMAIL
-    });
-};
-
-/**
- * Deactivate accounts who are completed with the study, except for admin accounts. Called 3 times a day. Scheduled via CRON jobs in app.js
- */
-exports.stillActive = async() => {
-    try {
-        const activeUsers = await User.find().where('active').equals(true).exec();
-        for (const user of activeUsers) {
-            const study_length = 86400000 * process.env.NUM_DAYS; // Milliseconds in NUM_DAYS days
-            const time_diff = Date.now() - user.createdAt; // Time difference between now and account creation.
-            if ((time_diff >= study_length) && !user.isAdmin) {
-                user.active = false;
-                user.logPostStats();
-                await user.save();
-            }
-        }
-    } catch (err) {
-        next(err);
-    }
-};
-
-/**
- * GET /completed
- * Render Admin Dashboard: Basic information on users currrently in the study
- */
-exports.userTestResults = async(req, res) => {
-    if (!req.user.isAdmin) {
-        res.redirect('/');
-    } else {
-        try {
-            const users = await User.find().where('isAdmin').equals(false).exec();
-            for (const user of users) {
-                const study_length = 86400000 * process.env.NUM_DAYS; // Milliseconds in NUM_DAYS days
-                const time_diff = Date.now() - user.createdAt; // Time difference between now and account creation.
-                if ((time_diff >= study_length) && !user.isAdmin) {
-                    user.active = false;
-                    user.logPostStats();
-                    await user.save();
-                }
-            }
-            res.render('completed', { users: users });
-        } catch (err) {
-            next(err);
-        }
-    }
-};
+    if (!validator.isLength(req.body.password, { min: 4 })) validationErrors.push({ msg: 'Password
