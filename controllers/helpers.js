@@ -131,3 +131,34 @@ exports.getFeed = function(user_posts, script_feed, user, order, removeHarmfulCo
     finalfeed = new_user_posts.concat(finalfeed);
     return finalfeed;
 };
+
+/**
+ * Reposts a post by creating a new post object based on the original post.
+ * @param {Object} originalPost - The original post object to be reposted
+ * @param {Object} user - The user reposting the post
+ * @returns {Object} newPost - The newly created post object representing the reposted post
+ */
+exports.repostPost = function(originalPost, user) {
+    // Example logic: Create a new post object based on the original post
+    const newPost = {
+        // Copy necessary fields from originalPost
+        id: generateUniqueId(), // Generate a new unique ID for the reposted post
+        content: originalPost.content, // Example: Copy content from originalPost
+        time: Date.now(), // Example: Set current time as the repost time
+        actor: user, // Example: Set the user as the actor reposting the post
+        comments: [], // Initialize with no comments
+        likes: 0, // Initialize with zero likes
+        repostedFrom: originalPost.id // Reference to the original post ID
+    };
+
+    // Example: Save the new post object to the database or user's feed
+    user.posts.push(newPost); // Add the new post to the user's posts array
+
+    return newPost;
+};
+
+// Example function to generate a unique ID for the reposted post
+function generateUniqueId() {
+    // Example: Generate a unique ID using a library or method of choice
+    return Math.random().toString(36).substr(2, 9); // Example: Generate a random alphanumeric string
+}
