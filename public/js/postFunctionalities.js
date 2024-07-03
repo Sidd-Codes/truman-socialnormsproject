@@ -8,6 +8,8 @@ function likePost(e) {
 
     const url = isUserPost ? "/userPost_feed" : "/feed";
 
+    console.log(`Liking post: ${postID}, isUserPost: ${isUserPost}, url: ${url}`);
+
     if (target.hasClass("red")) { // Unlike Post
         target.removeClass("red");
         label.html(function(i, val) { return val * 1 - 1 });
@@ -18,9 +20,18 @@ function likePost(e) {
             postClass: postClass,
             _csrf: $('meta[name="csrf-token"]').attr('content')
         }).done(function(response) {
-            // Update UI if necessary
+            console.log('Unlike response:', response);
+            if (response.result !== 'success') {
+                console.error('Failed to unlike post:', response.message);
+                // Revert the UI change if the request failed
+                target.addClass("red");
+                label.html(function(i, val) { return val * 1 + 1 });
+            }
         }).fail(function(error) {
             console.error('Error unliking post:', error);
+            // Revert the UI change if the request failed
+            target.addClass("red");
+            label.html(function(i, val) { return val * 1 + 1 });
         });
 
     } else { // Like Post
@@ -33,9 +44,18 @@ function likePost(e) {
             postClass: postClass,
             _csrf: $('meta[name="csrf-token"]').attr('content')
         }).done(function(response) {
-            // Update UI if necessary
+            console.log('Like response:', response);
+            if (response.result !== 'success') {
+                console.error('Failed to like post:', response.message);
+                // Revert the UI change if the request failed
+                target.removeClass("red");
+                label.html(function(i, val) { return val * 1 - 1 });
+            }
         }).fail(function(error) {
             console.error('Error liking post:', error);
+            // Revert the UI change if the request failed
+            target.removeClass("red");
+            label.html(function(i, val) { return val * 1 - 1 });
         });
     }
 }
