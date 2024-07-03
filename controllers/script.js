@@ -8,11 +8,13 @@ const _ = require('lodash');  // Make sure to install lodash if you haven't alre
  */
 exports.getScript = async (req, res) => {
     try {
-        // Render the script.pug view instead of feed
+        // Fetch or create the script data here
+        const script = []; // Replace this with your actual script data fetching logic
+        
         res.render('script', {
             title: 'Script',
-            user: req.user
-            // Add any other data you need to pass to the view
+            user: req.user,
+            script: script // Add this line to pass the script data to the template
         });
     } catch (err) {
         console.error('Error in getScript:', err);
