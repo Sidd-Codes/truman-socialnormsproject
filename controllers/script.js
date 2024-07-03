@@ -1,13 +1,34 @@
+const User = require('../models/User');
+const _ = require('lodash');  // Make sure to install lodash if you haven't already
+
+/**
+ * GET /
+ * GET /feed
+ * Render the script or feed page.
+ */
+exports.getScript = async (req, res) => {
+    try {
+        // Add your logic here to fetch and render the script or feed
+        // This is just a placeholder implementation
+        res.render('feed', {
+            title: 'Feed',
+            user: req.user
+        });
+    } catch (err) {
+        console.error('Error in getScript:', err);
+        res.status(500).send('An error occurred while loading the feed');
+    }
+};
+
 /**
  * POST /feed/
  * Record user's actions on ACTOR posts. 
  */
-exports.postUpdateFeedAction = async (req, res, next) => {
+exports.postUpdateFeedAction = async (req, res) => {
     try {
         console.log('postUpdateFeedAction request:', req.body);
         const user = await User.findById(req.user.id).exec();
         let feedIndex = _.findIndex(user.feedAction, function (o) { return o.post == req.body.postID; });
-
         if (feedIndex == -1) {
             const cat = {
                 post: req.body.postID,
@@ -15,7 +36,6 @@ exports.postUpdateFeedAction = async (req, res, next) => {
             };
             feedIndex = user.feedAction.push(cat) - 1;
         }
-
         if (req.body.like) {
             const like = req.body.like;
             user.feedAction[feedIndex].likeTime.push(like);
@@ -31,12 +51,11 @@ exports.postUpdateFeedAction = async (req, res, next) => {
             user.feedAction[feedIndex].harmfulTime.push(harmful);
             user.feedAction[feedIndex].harmful = true;
         }
-
         await user.save();
         res.send({ result: "success" });
     } catch (err) {
         console.error('Error in postUpdateFeedAction:', err);
-        res.send({ result: "error", message: err.message });
+        res.status(500).send({ result: "error", message: err.message });
     }
 };
 
@@ -44,17 +63,14 @@ exports.postUpdateFeedAction = async (req, res, next) => {
  * POST /userPost_feed/
  * Record user's actions on USER posts, including reposting.
  */
-exports.postUpdateUserPostFeedAction = async (req, res, next) => {
+exports.postUpdateUserPostFeedAction = async (req, res) => {
     try {
         console.log('postUpdateUserPostFeedAction request:', req.body);
         const user = await User.findById(req.user.id).exec();
         let feedIndex = _.findIndex(user.posts, function (o) { return o.postID == req.body.postID; });
-
         if (feedIndex == -1) {
-            res.send({ result: "error", message: "Post not found" });
-            return;
+            return res.status(404).send({ result: "error", message: "Post not found" });
         }
-
         if (req.body.like) {
             user.posts[feedIndex].liked = true;
         } else if (req.body.unlike) {
@@ -62,11 +78,24 @@ exports.postUpdateUserPostFeedAction = async (req, res, next) => {
         } else if (req.body.harmful) {
             user.posts[feedIndex].harmful = true;
         }
-
         await user.save();
         res.send({ result: "success" });
     } catch (err) {
         console.error('Error in postUpdateUserPostFeedAction:', err);
-        res.send({ result: "error", message: err.message });
+        res.status(500).send({ result: "error", message: err.message });
+    }
+};
+
+/**
+ * POST /post/new
+ * Create a new post.
+ */
+exports.newPost = async (req, res) => {
+    try {
+        // Implement new post creation logic here
+        res.send({ result: "success", message: "New post created" });
+    } catch (err) {
+        console.error('Error in newPost:', err);
+        res.status(500).send({ result: "error", message: err.message });
     }
 };
