@@ -8,15 +8,15 @@ const _ = require('lodash');  // Make sure to install lodash if you haven't alre
  */
 exports.getScript = async (req, res) => {
     try {
-        // Add your logic here to fetch and render the script or feed
-        // This is just a placeholder implementation
-        res.render('feed', {
-            title: 'Feed',
+        // Render the script.pug view instead of feed
+        res.render('script', {
+            title: 'Script',
             user: req.user
+            // Add any other data you need to pass to the view
         });
     } catch (err) {
         console.error('Error in getScript:', err);
-        res.status(500).send('An error occurred while loading the feed');
+        res.status(500).send('An error occurred while loading the script');
     }
 };
 
