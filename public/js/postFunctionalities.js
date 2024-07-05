@@ -4,87 +4,58 @@ function likePost(e) {
     const postID = target.closest(".ui.fluid.card").attr("postID");
     const postClass = target.closest(".ui.fluid.card").attr("postClass");
     const currDate = Date.now();
-    const isUserPost = postClass === 'user_post';
-
-    const url = isUserPost ? "/userPost_feed" : "/feed";
-
-    console.log(`Liking post: ${postID}, isUserPost: ${isUserPost}, url: ${url}`);
 
     if (target.hasClass("red")) { // Unlike Post
         target.removeClass("red");
         label.html(function(i, val) { return val * 1 - 1 });
 
-        $.post(url, {
+        $.post("/feed", {
             postID: postID,
             unlike: currDate,
             postClass: postClass,
             _csrf: $('meta[name="csrf-token"]').attr('content')
         }).done(function(response) {
-            console.log('Unlike response:', response);
-            if (response.result !== 'success') {
-                console.error('Failed to unlike post:', response.message);
-                // Revert the UI change if the request failed
-                target.addClass("red");
-                label.html(function(i, val) { return val * 1 + 1 });
-            }
+            // Update UI if necessary
         }).fail(function(error) {
             console.error('Error unliking post:', error);
-            // Revert the UI change if the request failed
-            target.addClass("red");
-            label.html(function(i, val) { return val * 1 + 1 });
         });
 
     } else { // Like Post
         target.addClass("red");
         label.html(function(i, val) { return val * 1 + 1 });
 
-        $.post(url, {
+        $.post("/feed", {
             postID: postID,
             like: currDate,
             postClass: postClass,
             _csrf: $('meta[name="csrf-token"]').attr('content')
         }).done(function(response) {
-            console.log('Like response:', response);
-            if (response.result !== 'success') {
-                console.error('Failed to like post:', response.message);
-                // Revert the UI change if the request failed
-                target.removeClass("red");
-                label.html(function(i, val) { return val * 1 - 1 });
-            }
+            // Update UI if necessary
         }).fail(function(error) {
             console.error('Error liking post:', error);
-            // Revert the UI change if the request failed
-            target.removeClass("red");
-            label.html(function(i, val) { return val * 1 - 1 });
         });
     }
 }
 
 function markAsHarmful(e) {
     const target = $(e.target).closest('.ui.harmful.button');
-    const postID = target.closest(".ui.fluid.card").attr("postID");
-    const postClass = target.closest(".ui.fluid.card").attr("postClass");
-    const currDate = Date.now();
-    const isUserPost = postClass === 'user_post';
+    const post = target.closest(".ui.fluid.card");
+    const postID = post.attr("postID");
+    const postClass = post.attr("postClass");
+    const flag = Date.now();
 
-    const url = isUserPost ? "/userPost_feed" : "/feed";
-
-    console.log(`Marking post as harmful: ${postID}, isUserPost: ${isUserPost}, url: ${url}`);
-
-    $.post(url, {
+    $.post("/feed", {
         postID: postID,
-        harmful: currDate,
+        flag: flag,
+        harmful: true, // Indicate that the post is harmful
         postClass: postClass,
         _csrf: $('meta[name="csrf-token"]').attr('content')
     }).done(function(response) {
-        console.log('Harmful response:', response);
-        if (response.result !== 'success') {
-            console.error('Failed to mark post as harmful:', response.message);
-        } else {
-            target.addClass('red').prop('disabled', true);
-        }
+        console.log("Marked as harmful successfully!");
+        // Update button appearance
+        target.addClass('red').prop('disabled', true);
     }).fail(function(error) {
-        console.error('Error marking post as harmful:', error);
+        console.error("Error marking as harmful:", error);
     });
 }
 
@@ -94,18 +65,15 @@ function repostPost(e) {
     const postID = post.attr("postID");
     const postClass = post.attr("postClass");
     const currDate = Date.now();
-    const isUserPost = postClass === 'user_post';
 
-    const url = isUserPost ? "/userPost_feed" : "/feed";
-
-    console.log(`Reposting post: ${postID}, isUserPost: ${isUserPost}, url: ${url}`);
-
-    $.post(url, {
+    $.post("/feed", {
         postID: postID,
         repost: currDate,
         postClass: postClass,
         _csrf: $('meta[name="csrf-token"]').attr('content')
     }).done(function(response) {
+        // Assuming response contains updated number of reposts or any other relevant data
+        // You can update the UI here if needed
         console.log("Repost successful!");
     }).fail(function(error) {
         console.error("Error reposting:", error);
@@ -115,38 +83,26 @@ function repostPost(e) {
 function followUser(e) {
     const target = $(e.target);
     const username = target.attr('actor_un');
-
-    if (target.text().trim() == "Follow") { // Follow Actor
+    if (target.text().trim() == "Follow") { //Follow Actor
         $(`.ui.basic.primary.follow.button[actor_un='${username}']`).each(function(i, element) {
             const button = $(element);
             button.text("Following");
             button.prepend("<i class='check icon'></i>");
-        });
-
+        })
         $.post("/user", {
             followed: username,
             _csrf: $('meta[name="csrf-token"]').attr('content')
-        }).done(function(response) {
-            console.log("Followed successfully!");
-        }).fail(function(error) {
-            console.error("Error following user:", error);
-        });
-
-    } else { // Unfollow Actor
+        })
+    } else { //Unfollow Actor
         $(`.ui.basic.primary.follow.button[actor_un='${username}']`).each(function(i, element) {
             const button = $(element);
             button.text("Follow");
             button.find('i').remove();
-        });
-
+        })
         $.post("/user", {
             unfollowed: username,
             _csrf: $('meta[name="csrf-token"]').attr('content')
-        }).done(function(response) {
-            console.log("Unfollowed successfully!");
-        }).fail(function(error) {
-            console.error("Error unfollowing user:", error);
-        });
+        })
     }
 }
 
