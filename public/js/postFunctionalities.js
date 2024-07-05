@@ -24,16 +24,19 @@ function likePost(e) {
         target.addClass("red");
         label.html(function(i, val) { return val * 1 + 1 });
 
-        $.post("/feed", {
-            postID: postID,
-            like: currDate,
-            postClass: postClass,
-            _csrf: $('meta[name="csrf-token"]').attr('content')
-        }).done(function(response) {
-            // Update UI if necessary
-        }).fail(function(error) {
-            console.error('Error liking post:', error);
-        });
+        if (target.closest(".ui.fluid.card").attr("type") == 'userPost')
+            $.post("/userPost_feed", {
+                postID: postID,
+                like: currDate,
+                _csrf: $('meta[name="csrf-token"]').attr('content')
+            });
+        else
+            $.post("/feed", {
+                postID: postID,
+                like: currDate,
+                postClass: postClass,
+                _csrf: $('meta[name="csrf-token"]').attr('content')
+            });
     }
 }
 
