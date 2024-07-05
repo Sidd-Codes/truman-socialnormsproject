@@ -1,13 +1,13 @@
 function likePost(e) {
     const target = $(e.target).closest('.ui.like.button');
-    const label = target.closest('.ui.fluid.card').find(".ui.basic.green.left.pointing.label.count");
+    const label = target.closest('.ui.labeled.button').find(".ui.basic.red.left.pointing.label.count");
     const postID = target.closest(".ui.fluid.card").attr("postID");
     const postClass = target.closest(".ui.fluid.card").attr("postClass");
     const currDate = Date.now();
 
     if (target.hasClass("red")) { // Unlike Post
         target.removeClass("red");
-        label.html(function(i, val) { return val * 1 - 1 });
+        label.html(function(i, val) { return parseInt(val) - 1 });
 
         $.post("/feed", {
             postID: postID,
@@ -22,21 +22,18 @@ function likePost(e) {
 
     } else { // Like Post
         target.addClass("red");
-        label.html(function(i, val) { return val * 1 + 1 });
+        label.html(function(i, val) { return parseInt(val) + 1 });
 
-        if (target.closest(".ui.fluid.card").attr("type") == 'userPost')
-            $.post("/userPost_feed", {
-                postID: postID,
-                like: currDate,
-                _csrf: $('meta[name="csrf-token"]').attr('content')
-            });
-        else
-            $.post("/feed", {
-                postID: postID,
-                like: currDate,
-                postClass: postClass,
-                _csrf: $('meta[name="csrf-token"]').attr('content')
-            });
+        $.post("/feed", {
+            postID: postID,
+            like: currDate,
+            postClass: postClass,
+            _csrf: $('meta[name="csrf-token"]').attr('content')
+        }).done(function(response) {
+            // Update UI if necessary
+        }).fail(function(error) {
+            console.error('Error liking post:', error);
+        });
     }
 }
 
