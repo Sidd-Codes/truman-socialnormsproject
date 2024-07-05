@@ -134,7 +134,7 @@ $(window).on('load', () => {
     $("i.big.send.link.icon").on('click', addComment);
 
     // Like/Unlike Post
-    $('.like.button').on('click', likePost);
+    $('.ui.like.button').on('click', likePost);
 
     // Mark as Harmful
     $('.ui.harmful.button').on('click', markAsHarmful);
