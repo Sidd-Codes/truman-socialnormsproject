@@ -1,12 +1,12 @@
 function likePost(e) {
     const target = $(e.target).closest('.ui.like.button');
-    const label = target.closest('.ui.labeled.button').find(".ui.basic.red.left.pointing.label.count");
+    const label = target.closest('.ui.labeled.button').find(".ui.basic.green.left.pointing.label.count");
     const postID = target.closest(".ui.fluid.card").attr("postID");
     const postClass = target.closest(".ui.fluid.card").attr("postClass");
     const currDate = Date.now();
 
-    if (target.hasClass("red")) { // Unlike Post
-        target.removeClass("red");
+    if (target.hasClass("green")) { // Unlike Post
+        target.removeClass("green");
         label.html(function(i, val) { return parseInt(val) - 1 });
 
         $.post("/feed", {
@@ -21,7 +21,7 @@ function likePost(e) {
         });
 
     } else { // Like Post
-        target.addClass("red");
+        target.addClass("green");
         label.html(function(i, val) { return parseInt(val) + 1 });
 
         $.post("/feed", {
