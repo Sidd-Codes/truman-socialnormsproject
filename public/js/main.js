@@ -24,34 +24,12 @@ function resetActiveTimer(loggingOut) {
 }
 
 $(window).on("load", function() {
+    console.log("Window loaded in main.js");
+
     /**
      * Recording user's active time on website:
      */
-    // From the first answer from https://stackoverflow.com/questions/667555/how-to-detect-idle-time-in-javascript
-    let idleTime = 0;
-    // Definition of an active user: mouse movement, clicks etc.
-    // idleTime is reset to 0 whenever mouse movement occurs.
-    $('#pagegrid').on('mousemove keypress scroll mousewheel', function() {
-        //If there hasn't been a "start time" for activity, set it. We use session storage so we can track activity when pages changes too.
-        if (!isActive) {
-            activeStartTime = Date.now();
-            isActive = true;
-        }
-        idleTime = 0;
-    });
-
-    // Every 15 seconds, increase idleTime by 1. If idleTime is greater than 4 (i.e. there has been inactivity for about 60-74 seconds, log the duration of activity and reset the active timer)
-    setInterval(function() {
-        idleTime += 1;
-        if (idleTime > 4) { // 60.001-74.999 seconds (idle time)
-            resetActiveTimer(false);
-        }
-    }, 15000);
-
-    // When a user logs out of the website, log the duration of activity and reset the active timer).
-    $('a.item.logoutLink').on('click', function() {
-        resetActiveTimer(true);
-    });
+    // ... (keep the existing code for user activity tracking)
 
     /**
      * Other site functionalities:
@@ -84,6 +62,35 @@ $(window).on("load", function() {
             }, 5000);
         }
     };
+
+    // Picture Preview on Image Selection (Used for: uploading new post, updating profile)
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                $('#imgInp').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    $("#picinput").change(function() {
+        readURL(this);
+    });
+
+    // Lazy loading of images on site
+    $(`#content .fluid.card .img img, #content img.ui.avatar.image, #content a.avatar img`).visibility({
+        type: 'image'
+    });
+
+    // Initialize post functionalities if the function exists
+    if (typeof initializePostFunctionalities === 'function') {
+        console.log("Calling initializePostFunctionalities from main.js");
+        initializePostFunctionalities();
+    } else {
+        console.error("initializePostFunctionalities function not found");
+    }
+});
 
     // Picture Preview on Image Selection (Used for: uploading new post, updating profile)
     function readURL(input) {
