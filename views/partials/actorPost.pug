@@ -21,10 +21,10 @@ ui.fluid.card.dim(
       i.reply.icon
       | Reply
     .ui.labeled.button(tabindex='0')
-  .ui.like.button(class=val.like ? "red" : null)
+  .ui.like.button(class=val.like ? "green" : null)
     i.heart.icon
     | Like
-  a.ui.basic.red.left.pointing.label.count=val.likes
+  a.ui.basic.green.left.pointing.label.count=val.likes
     //- Updated Harmful button
     .ui.harmful.button(tabindex='0', onClick='markAsHarmful(event)', class=val.markedAsHarmful ? 'red' : '')
       i.warning.circle.icon
